@@ -40,6 +40,9 @@ namespace ArtilleryShootChallenge
             Console.WriteLine("Press any key to continue to cluster attack...");
             Console.ReadKey();
             ClusterAttack(ImportTargets("../../input.txt"));
+            Console.WriteLine("Press any key to continue to high-res cluster attack...");
+            Console.ReadKey();
+            ClusterAttack(ImportTargets("../../input.txt"), 1);
         }
 
         static void BasicAttack(List<Target> targets)
@@ -138,7 +141,7 @@ namespace ArtilleryShootChallenge
             return 2000 * Math.Cos(2 * angle.toRadians());
         }
 
-        static void ClusterAttack(List<Target> targets)
+        static void ClusterAttack(List<Target> targets, int clusterResolution = 10)
         {
             double time = 0;
             double angle = 22.5;
@@ -147,7 +150,7 @@ namespace ArtilleryShootChallenge
 
             List<TargetCluster> clusters = new List<TargetCluster>();
             // Low resolution, will force choice b/w [.1...9..9.][.9..9...1.] even though [9..9..9..9] would be the ideal cluster
-            for (var i = targets.Min(s => s.Distance) + 5; i < targets.Max(s => s.Distance); i = i + 10)
+            for (var i = targets.Min(s => s.Distance) + 5; i < targets.Max(s => s.Distance); i = i + clusterResolution)
             {
                 var targetsInCluster = targets.Where(s => (s.Distance < i + 5) && (s.Distance >= i - 5)).ToList();
                 clusters.Add(new TargetCluster { DistanceAtCenter = i, TotalValue = targetsInCluster.Sum(s => s.PointValue) });
@@ -169,6 +172,14 @@ namespace ArtilleryShootChallenge
                 }
 
                 // Time to pick a new target!
+                //Recalculate clusters
+                clusters = new List<TargetCluster>();
+                for (var i = targets.Min(s => s.Distance) + 5; i < targets.Max(s => s.Distance); i = i + clusterResolution)
+                {
+                    var targetsInCluster = targets.Where(s => (s.Distance < i + 5) && (s.Distance >= i - 5)).ToList();
+                    clusters.Add(new TargetCluster { DistanceAtCenter = i, TotalValue = targetsInCluster.Sum(s => s.PointValue) });
+                }
+
                 var maxrange = Math.Max(Range(Math.Max(angle - 10, 10)), Range(Math.Min(angle + 10, 80)));
                 var minrange = Math.Min(Range(Math.Max(angle - 10, 10)), Range(Math.Min(angle + 10, 80)));
                 // pick the highest point value target in range
